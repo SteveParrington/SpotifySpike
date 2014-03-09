@@ -26,10 +26,10 @@ class ControllerThread(threading.Thread):
             pass
 
     def login(self, username, password): 
-        pass 
+        self.session.login(username, password) 
 
     def logout(self):
-        pass
+        self.session.logout() 
 
     def get_album(self, album_id):
         pass
@@ -43,11 +43,11 @@ class ControllerThread(threading.Thread):
     def process_events(self):
         self.session.process_events()
 
-    def login_complete(self):
-        pass
+    def login_complete(self, session, error_type):
+        self.out_queue.put_nowait("Login successful!")
 
-    def logout_complete(self):
-        pass
+    def logout_complete(self, session):
+        self.out_queue.put_nowait("Logged out")
 
     def trigger_callbacks(self):
         ''' This is a callback that is called by an internal libspotify thread
