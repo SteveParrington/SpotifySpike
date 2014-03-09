@@ -1,1 +1,2 @@
 pyspotify
+pyalsaaudio
