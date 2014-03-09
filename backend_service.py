@@ -1,20 +1,22 @@
 import threading
-import queue
+import Queue
 import spotify
 
 class ControllerThread(threading.Thread):
 
     def __init__(self, out_queue):
-        self.in_queue = queue.Queue()
+        self.in_queue = Queue.Queue()
         self.out_queue = out_queue
         self.session = spotify.Session()
         self.active = True
         self.register_callbacks()
+        super(ControllerThread, self).__init__()
 
     def run(self):
         while self.active:
             self.execute_command()
-                
+            self.session.process_events()
+
     def execute_command(self):
         valid_opcodes = ('login', 'logout', 'get_album', 'get_song', 'exit',
                          'process_events')
@@ -22,7 +24,7 @@ class ControllerThread(threading.Thread):
             command = self.in_queue.get_nowait()
             if command.opcode in valid_opcodes:
                 getattr(self, command.opcode)(*command.args)
-        except queue.Empty:
+        except Queue.Empty:
             pass
 
     def login(self, username, password): 
@@ -40,30 +42,19 @@ class ControllerThread(threading.Thread):
     def exit(self):
         self.active = False
 
-    def process_events(self):
-        self.session.process_events()
-
     def login_complete(self, session, error_type):
         self.out_queue.put_nowait("Login successful!")
 
     def logout_complete(self, session):
         self.out_queue.put_nowait("Logged out")
 
-    def trigger_callbacks(self):
-        ''' This is a callback that is called by an internal libspotify thread
-            to notify this thread that it should process all other pending 
-            events, hence the somewhat strange behaviour of this object sending
-            a command to itself. '''
-        command = Command('process_events')
-        self.in_queue.put_nowait(command)
-
     def register_callbacks(self):
         callbacks = {
             'LOGGED_IN': self.login_complete,
-            'LOGGED_OUT': self.logout_complete,
-            'NOTIFY_MAIN_THREAD': self.trigger_callbacks
+            'LOGGED_OUT': self.logout_complete
         }
         for name in callbacks:
+            print(getattr(spotify.SessionEvent, name))
             self.session.on(getattr(spotify.SessionEvent, name), callbacks[name])
 
 
