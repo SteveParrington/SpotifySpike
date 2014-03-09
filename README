@@ -1,0 +1,7 @@
+Usage: python spotifyspike.py
+
+To log in: login <username> <password>
+To log out: logout
+To exit: Ctrl+C
+
+Note: requires a libspotify key named spotify_appkey.key in the directory this is run from
