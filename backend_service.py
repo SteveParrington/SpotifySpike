@@ -34,10 +34,16 @@ class ControllerThread(threading.Thread):
         self.session.logout() 
 
     def get_album(self, album_id):
-        pass
+        album = spotify.Album('spotify:album:{0}'.format(album_id))
+        album.load()
+        response = "Title: {0}\nArtist: {1}".format(album.name, album.artist.name)
+        self.out_queue.put(response)
 
     def get_song(self, song_id):
-        pass
+        song = spotify.Track('spotify:track:{0}'.format(song_id))
+        song.load()
+        response = "Title: {0}\nArtist: {1}".format(song.name, song.album.artist.name)
+        self.out_queue.put(response)
 
     def exit(self):
         self.active = False
@@ -54,7 +60,6 @@ class ControllerThread(threading.Thread):
             'LOGGED_OUT': self.logout_complete
         }
         for name in callbacks:
-            print(getattr(spotify.SessionEvent, name))
             self.session.on(getattr(spotify.SessionEvent, name), callbacks[name])
 
 
